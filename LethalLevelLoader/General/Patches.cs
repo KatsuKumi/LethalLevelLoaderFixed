@@ -256,21 +256,21 @@ namespace LethalLevelLoader
             return (TerminalManager.RunLethalLevelLoaderTerminalEvents(node));
         }
 
-        [HarmonyPriority(harmonyPriority)]
-        [HarmonyPatch(typeof(Terminal), "LoadNewNode")]
-        [HarmonyPrefix]
-        internal static void TerminalLoadNewNode_Prefix(Terminal __instance, ref TerminalNode node)
-        {
-            if (node == TerminalManager.moonsKeyword.specialKeywordResult)
-            {
-                TerminalManager.RefreshExtendedLevelGroups();
-                node.displayText = TerminalManager.GetMoonsTerminalText();
-            }
-            else if (__instance.currentNode == TerminalManager.moonsKeyword.specialKeywordResult)
-                foreach (ExtendedLevel extendedLevel in PatchedContent.ExtendedLevels)
-                    if (extendedLevel.routeNode == node && extendedLevel.isLocked == true)
-                        TerminalManager.SwapRouteNodeToLockedNode(extendedLevel, ref node);
-        }
+        // [HarmonyPriority(harmonyPriority)]
+        // [HarmonyPatch(typeof(Terminal), "LoadNewNode")]
+        // [HarmonyPrefix]
+        // internal static void TerminalLoadNewNode_Prefix(Terminal __instance, ref TerminalNode node)
+        // {
+        //     if (node == TerminalManager.moonsKeyword.specialKeywordResult)
+        //     {
+        //         TerminalManager.RefreshExtendedLevelGroups();
+        //         node.displayText = TerminalManager.GetMoonsTerminalText();
+        //     }
+        //     else if (__instance.currentNode == TerminalManager.moonsKeyword.specialKeywordResult)
+        //         foreach (ExtendedLevel extendedLevel in PatchedContent.ExtendedLevels)
+        //             if (extendedLevel.routeNode == node && extendedLevel.isLocked == true)
+        //                 TerminalManager.SwapRouteNodeToLockedNode(extendedLevel, ref node);
+        // }
 
         //Called via SceneManager event.
         internal static void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
