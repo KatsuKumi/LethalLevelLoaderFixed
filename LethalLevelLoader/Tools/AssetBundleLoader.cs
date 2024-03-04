@@ -176,10 +176,13 @@ namespace LethalLevelLoader
         {
             DebugHelper.Log("Initializing Bundles and sorting them by name");
             obtainedExtendedLevelsList.Sort((x, y) => String.Compare(x.NumberlessPlanetName, y.NumberlessPlanetName, StringComparison.Ordinal));
-            obtainedExtendedDungeonFlowsList.Sort((x, y) => String.Compare(x.dungeonDisplayName, y.dungeonDisplayName, StringComparison.Ordinal));
+            obtainedExtendedDungeonFlowsList.Sort((x, y) => String.Compare(x.dungeonFlow.name, y.dungeonFlow.name, StringComparison.Ordinal));
             DebugHelper.Log("Current level order : ");
             foreach (ExtendedLevel extendedLevel in obtainedExtendedLevelsList)
                 DebugHelper.Log(extendedLevel.name);
+            DebugHelper.Log("Current dungeon order : ");
+            foreach (ExtendedDungeonFlow extendedDungeonFlow in obtainedExtendedDungeonFlowsList)
+                DebugHelper.Log(extendedDungeonFlow.dungeonFlow.name);
             foreach (ExtendedDungeonFlow extendedDungeonFlow in obtainedExtendedDungeonFlowsList)
             {
                 extendedDungeonFlow.Initialize(ContentType.Custom);
