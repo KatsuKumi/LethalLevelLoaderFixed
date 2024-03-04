@@ -17,9 +17,9 @@ namespace LethalLevelLoader
     [BepInDependency(LethalLib.Plugin.ModGUID)]
     internal class Plugin : BaseUnityPlugin
     {
-        public const string ModGUID = "refract.lethallevelloaderfixed";
-        public const string ModName = "LethalLevelLoaderFixed";
-        public const string ModVersion = "1.0.0.0";
+        public const string ModGUID = "imabatby.lethallevelloader";
+        public const string ModName = "LethalLevelLoader";
+        public const string ModVersion = "2.0.0.0";
 
         public static Plugin Instance;
 
@@ -39,7 +39,7 @@ namespace LethalLevelLoader
 
             logger = Logger;
 
-            Logger.LogInfo($"LethalLevelLoader loaded!!");
+            Logger.LogInfo($"LethalLevelLoader(Fixed) loaded!!");
 
             Harmony.PatchAll(typeof(LethalLevelLoaderNetworkManager));
             Harmony.PatchAll(typeof(DungeonLoader));
