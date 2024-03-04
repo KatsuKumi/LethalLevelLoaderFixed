@@ -19,7 +19,7 @@ namespace LethalLevelLoader
     {
         public const string ModGUID = "imabatby.lethallevelloader";
         public const string ModName = "LethalLevelLoader";
-        public const string ModVersion = "1.1.0.6";
+        public const string ModVersion = "1.2.0.0";
 
         public static Plugin Instance;
 

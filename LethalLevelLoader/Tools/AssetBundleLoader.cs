@@ -1,4 +1,5 @@
-﻿using DunGen;
+﻿using System;
+using DunGen;
 using DunGen.Graph;
 using HarmonyLib;
 using System.Collections;
@@ -76,6 +77,7 @@ namespace LethalLevelLoader
                 RegisterDungeonContent(extendedDungeonFlow, networkManager);
         }
 
+
         internal static void LoadBundles(PreInitSceneScript preInitSceneScript)
         {
             DebugHelper.Log("Finding LethalBundles!");
@@ -87,8 +89,22 @@ namespace LethalLevelLoader
             lethalLibFolder = lethalLibFile.Parent;
             pluginsFolder = lethalLibFile.Parent.Parent;
 
+            // Get all files
+            string[] files = Directory.GetFiles(pluginsFolder.FullName, specifiedFileExtension, SearchOption.AllDirectories);
+
+            // Sort files based on their names only, not the full path
+            Array.Sort(files, (file1, file2) => 
+                String.Compare(Path.GetFileName(file1), Path.GetFileName(file2), StringComparison.Ordinal));
+
+            // Log sorted file names
+            DebugHelper.Log("Sorted files:");
+            foreach (string file in files) // Log each file name after sorting
+            {
+                DebugHelper.Log(Path.GetFileName(file));
+            }
+
             int counter = 0;
-            foreach (string file in Directory.GetFiles(pluginsFolder.FullName, specifiedFileExtension, SearchOption.AllDirectories))
+            foreach (string file in files) // Now the files are sorted by name
             {
                 counter++;
                 FileInfo fileInfo = new FileInfo(file);
@@ -151,7 +167,7 @@ namespace LethalLevelLoader
             {
                 foundExtendedLevelScene = false;
                 foreach (KeyValuePair<string, AssetBundle> assetBundle in assetBundles)
-                    if (assetBundle.Value != null && assetBundle.Value.isStreamedSceneAssetBundle)
+                    if (assetBundle.Value is not null && assetBundle.Value.isStreamedSceneAssetBundle)
                         foreach (string scenePath in assetBundle.Value.GetAllScenePaths())
                             if (GetSceneName(scenePath) == extendedLevel.selectableLevel.sceneName)
                             {
@@ -170,6 +186,12 @@ namespace LethalLevelLoader
 
         internal static void InitializeBundles()
         {
+            DebugHelper.Log("Initializing Bundles and sorting them by name");
+            obtainedExtendedLevelsList.Sort((x, y) => String.Compare(x.NumberlessPlanetName, y.NumberlessPlanetName, StringComparison.Ordinal));
+            obtainedExtendedDungeonFlowsList.Sort((x, y) => String.Compare(x.dungeonDisplayName, y.dungeonDisplayName, StringComparison.Ordinal));
+            DebugHelper.Log("Current level order : ");
+            foreach (ExtendedLevel extendedLevel in obtainedExtendedLevelsList)
+                DebugHelper.Log(extendedLevel.name);
             foreach (ExtendedDungeonFlow extendedDungeonFlow in obtainedExtendedDungeonFlowsList)
             {
                 extendedDungeonFlow.Initialize(ContentType.Custom);
@@ -178,17 +200,18 @@ namespace LethalLevelLoader
             }
             foreach (ExtendedLevel extendedLevel in obtainedExtendedLevelsList)
             {
-                //DebugHelper.Log(extendedLevel.contentSourceName);
+                DebugHelper.Log(extendedLevel.contentSourceName);
                 if (extendedLevel.selectableLevel != null)
                 {
-                    //DebugHelper.Log(extendedLevel.selectableLevel.PlanetName);
+                    DebugHelper.Log(extendedLevel.selectableLevel.PlanetName);
                     extendedLevel.levelType = ContentType.Custom;
                     extendedLevel.Initialize(extendedLevel.name, generateTerminalAssets: true);
                     PatchedContent.ExtendedLevels.Add(extendedLevel);
+                    extendedLevel.SetLevelID();
+                    DebugHelper.Log("Added ExtendedLevel: " + extendedLevel.NumberlessPlanetName + " with level id : " + extendedLevel.selectableLevel.levelID);
                 }
-                //WarmUpBundleShaders(extendedLevel);
             }
-            //DebugHelper.DebugAllLevels();
+            DebugHelper.DebugAllLevels();
         }
 
         public static void RegisterExtendedDungeonFlow(ExtendedDungeonFlow extendedDungeonFlow)
@@ -391,5 +414,6 @@ namespace LethalLevelLoader
             DebugHelper.LogWarning("AssetBundleLoader.GetAllSpawnSyncedObjectsInTiles() is deprecated. Please move to dungeonFlow.GetSpawnSyncedObjects() to prevent issues in following updates.");
             return (new List<SpawnSyncedObject>().ToArray());
         }
+
     }
 }

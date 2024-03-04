@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -20,32 +22,47 @@ namespace LethalLevelLoader.Tools
         internal static void BindConfigs()
         {
             ConfigFile newConfigFile = new ConfigFile(Path.Combine(Paths.ConfigPath, "LethalLevelLoader.cfg"), false);
+            
+            DebugHelper.Log("Binding Configs");
 
             GeneralSettingsConfig newGeneralSettingsConfig = new GeneralSettingsConfig(newConfigFile, "LethalLevelLoader Settings", 5);
             newGeneralSettingsConfig.BindConfigs();
-
+            
             foreach (ExtendedDungeonFlow extendedDungeonFlow in PatchedContent.VanillaExtendedDungeonFlows)
             {
-                ExtendedDungeonConfig newConfig = new ExtendedDungeonConfig(newConfigFile, "Vanilla Dungeon: " + (PatchedContent.VanillaExtendedDungeonFlows.IndexOf(extendedDungeonFlow) + 1).ToString() + ". - " + extendedDungeonFlow.dungeonDisplayName.StripSpecialCharacters() + " (" + extendedDungeonFlow.dungeonFlow.name + ")", 7);
-                newConfig.BindConfigs(extendedDungeonFlow);
+                string dungeonDisplayName = extendedDungeonFlow.dungeonDisplayName.StripSpecialCharacters();
+                int dungeonIndex = PatchedContent.VanillaExtendedDungeonFlows.IndexOf(extendedDungeonFlow) + 1;
+                string dungeonFlowName = extendedDungeonFlow.dungeonFlow.name;
+                string configSectionName = GenerateVanillaConfigSectionName(dungeonIndex, dungeonDisplayName, dungeonFlowName);
+
+                CreateAndBindVanillaDungeonConfig(newConfigFile, configSectionName, extendedDungeonFlow);
             }
 
             foreach (ExtendedDungeonFlow extendedDungeonFlow in PatchedContent.CustomExtendedDungeonFlows)
             {
-                ExtendedDungeonConfig newConfig = new ExtendedDungeonConfig(newConfigFile, "Custom Dungeon: " + (PatchedContent.CustomExtendedDungeonFlows.IndexOf(extendedDungeonFlow) + 1).ToString() + ". - " + extendedDungeonFlow.dungeonDisplayName.StripSpecialCharacters(), 9);
-                newConfig.BindConfigs(extendedDungeonFlow);
+                string dungeonDisplayName = extendedDungeonFlow.dungeonDisplayName.StripSpecialCharacters();
+                int dungeonIndex = PatchedContent.CustomExtendedDungeonFlows.IndexOf(extendedDungeonFlow) + 1;
+                string configSectionName = GenerateConfigSectionName(dungeonIndex, dungeonDisplayName);
+
+                CreateAndBindDungeonConfig(newConfigFile, configSectionName, extendedDungeonFlow);
             }
 
             foreach (ExtendedLevel extendedLevel in PatchedContent.VanillaExtendedLevels)
             {
-                ExtendedLevelConfig newConfig = new ExtendedLevelConfig(newConfigFile, "Vanilla Level: " + (PatchedContent.VanillaExtendedLevels.IndexOf(extendedLevel) + 1).ToString() + ". - " + extendedLevel.selectableLevel.PlanetName.StripSpecialCharacters(), 6);
-                newConfig.BindConfigs(extendedLevel);
+                string levelDisplayName = extendedLevel.selectableLevel.PlanetName.StripSpecialCharacters();
+                int levelIndex = PatchedContent.VanillaExtendedLevels.IndexOf(extendedLevel) + 1;
+                string configSectionName = GenerateVanillaLevelConfigSectionName(levelIndex, levelDisplayName);
+
+                CreateAndBindVanillaLevelConfig(newConfigFile, configSectionName, extendedLevel);
             }
 
             foreach (ExtendedLevel extendedLevel in PatchedContent.CustomExtendedLevels)
             {
-                ExtendedLevelConfig newConfig = new ExtendedLevelConfig(newConfigFile, "Custom Level: " + (PatchedContent.CustomExtendedLevels.IndexOf(extendedLevel) + 1).ToString() + ". - " + extendedLevel.selectableLevel.PlanetName.StripSpecialCharacters(), 8);
-                newConfig.BindConfigs(extendedLevel);
+                string levelDisplayName = extendedLevel.selectableLevel.PlanetName.StripSpecialCharacters();
+                int levelIndex = PatchedContent.CustomExtendedLevels.IndexOf(extendedLevel) + 1;
+                string configSectionName = GenerateCustomLevelConfigSectionName(levelIndex, levelDisplayName);
+
+                CreateAndBindCustomLevelConfig(newConfigFile, configSectionName, extendedLevel);
             }
 
             if (debugLevelsString.Contains(", ") && debugLevelsString.LastIndexOf(", ") == (debugLevelsString.Length - 2))
@@ -56,12 +73,66 @@ namespace LethalLevelLoader.Tools
 
             debugLevelsString = string.Empty;
             debugDungeonsString = string.Empty;
+            
+            DeleteOrphanedEntries(newConfigFile);
+
+            newConfigFile.Save();
+        }
+
+        private static void DeleteOrphanedEntries(ConfigFile configFile)
+        {
+            PropertyInfo orphanedEntriesProp = configFile.GetType().GetProperty("OrphanedEntries", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var orphanedEntries = (Dictionary<ConfigDefinition, string>)orphanedEntriesProp.GetValue(configFile, null);
+
+            orphanedEntries.Clear();
+        }
+        private static string GenerateConfigSectionName(int index, string displayName)
+        {
+            return $"Custom Dungeon: {index}. - {displayName}";
+        }
+        
+        private static string GenerateVanillaConfigSectionName(int index, string displayName, string flowName)
+        {
+            return $"Vanilla Dungeon: {index}. - {displayName} ({flowName})";
+        }
+        
+        private static string GenerateVanillaLevelConfigSectionName(int index, string displayName)
+        {
+            return $"Vanilla Level: {index}. - {displayName}";
+        }
+
+        private static string GenerateCustomLevelConfigSectionName(int index, string displayName)
+        {
+            return $"Custom Level: {index}. - {displayName}";
+        }
+
+        private static void CreateAndBindCustomLevelConfig(ConfigFile configFile, string sectionName, ExtendedLevel level)
+        {
+            ExtendedLevelConfig newConfig = new ExtendedLevelConfig(configFile, sectionName, 8);
+            newConfig.BindConfigs(level);
+        }
+        private static void CreateAndBindVanillaLevelConfig(ConfigFile configFile, string sectionName, ExtendedLevel level)
+        {
+            ExtendedLevelConfig newConfig = new ExtendedLevelConfig(configFile, sectionName, 6);
+            newConfig.BindConfigs(level);
+        }
+        private static void CreateAndBindVanillaDungeonConfig(ConfigFile configFile, string sectionName, ExtendedDungeonFlow dungeonFlow)
+        {
+            ExtendedDungeonConfig newConfig = new ExtendedDungeonConfig(configFile, sectionName, 7);
+            newConfig.BindConfigs(dungeonFlow);
+        }
+        private static void CreateAndBindDungeonConfig(ConfigFile configFile, string sectionName, ExtendedDungeonFlow dungeonFlow)
+        {
+            ExtendedDungeonConfig newConfig = new ExtendedDungeonConfig(configFile, sectionName, 9);
+            newConfig.BindConfigs(dungeonFlow);
         }
 
         internal static string GetConfigCatagory(string catagoryName, string contentName)
         {
             return (spacer + " " + catagoryName + contentName + " " + spacer);
         }
+        
     }
 
     public class GeneralSettingsConfig : ConfigTemplate
