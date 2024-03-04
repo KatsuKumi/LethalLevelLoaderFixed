@@ -89,22 +89,10 @@ namespace LethalLevelLoader
             lethalLibFolder = lethalLibFile.Parent;
             pluginsFolder = lethalLibFile.Parent.Parent;
 
-            // Get all files
             string[] files = Directory.GetFiles(pluginsFolder.FullName, specifiedFileExtension, SearchOption.AllDirectories);
 
-            // Sort files based on their names only, not the full path
-            Array.Sort(files, (file1, file2) => 
-                String.Compare(Path.GetFileName(file1), Path.GetFileName(file2), StringComparison.Ordinal));
-
-            // Log sorted file names
-            DebugHelper.Log("Sorted files:");
-            foreach (string file in files) // Log each file name after sorting
-            {
-                DebugHelper.Log(Path.GetFileName(file));
-            }
-
             int counter = 0;
-            foreach (string file in files) // Now the files are sorted by name
+            foreach (string file in files)
             {
                 counter++;
                 FileInfo fileInfo = new FileInfo(file);
