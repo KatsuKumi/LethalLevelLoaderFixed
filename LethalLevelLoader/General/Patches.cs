@@ -256,21 +256,21 @@ namespace LethalLevelLoader
             return (TerminalManager.RunLethalLevelLoaderTerminalEvents(node));
         }
 
-        // [HarmonyPriority(harmonyPriority)]
-        // [HarmonyPatch(typeof(Terminal), "LoadNewNode")]
-        // [HarmonyPrefix]
-        // internal static void TerminalLoadNewNode_Prefix(Terminal __instance, ref TerminalNode node)
-        // {
-        //     if (node == TerminalManager.moonsKeyword.specialKeywordResult)
-        //     {
-        //         TerminalManager.RefreshExtendedLevelGroups();
-        //         node.displayText = TerminalManager.GetMoonsTerminalText();
-        //     }
-        //     else if (__instance.currentNode == TerminalManager.moonsKeyword.specialKeywordResult)
-        //         foreach (ExtendedLevel extendedLevel in PatchedContent.ExtendedLevels)
-        //             if (extendedLevel.routeNode == node && extendedLevel.isLocked == true)
-        //                 TerminalManager.SwapRouteNodeToLockedNode(extendedLevel, ref node);
-        // }
+        [HarmonyPriority(harmonyPriority)]
+        [HarmonyPatch(typeof(Terminal), "LoadNewNode")]
+        [HarmonyPrefix]
+        internal static void TerminalLoadNewNode_Prefix(Terminal __instance, ref TerminalNode node)
+        {
+            if (node == TerminalManager.moonsKeyword.specialKeywordResult)
+            {
+                TerminalManager.RefreshExtendedLevelGroups();
+                node.displayText = TerminalManager.GetMoonsTerminalText();
+            }
+            else if (__instance.currentNode == TerminalManager.moonsKeyword.specialKeywordResult)
+                foreach (ExtendedLevel extendedLevel in PatchedContent.ExtendedLevels)
+                    if (extendedLevel.routeNode == node && extendedLevel.isLocked == true)
+                        TerminalManager.SwapRouteNodeToLockedNode(extendedLevel, ref node);
+        }
 
         //Called via SceneManager event.
         internal static void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
@@ -315,6 +315,7 @@ namespace LethalLevelLoader
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> GenerateNewLevelClientRpcTranspiler(IEnumerable<CodeInstruction> instructions)
         {
+            DebugHelper.Log("Transpiling GenerateNewLevelClientRpc");
             CodeMatcher codeMatcher = new CodeMatcher(instructions)
                 .SearchForward(instructions => instructions.Calls(AccessTools.Method(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))))
                 .SetInstruction(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Patches), nameof(InjectHostDungeonFlowSelection))))
@@ -348,13 +349,20 @@ namespace LethalLevelLoader
         //Called via Transpiler.
         internal static void InjectHostDungeonFlowSelection()
         {
+            DebugHelper.Log("Injecting Host Dungeon Flow Selection");
             if (LevelManager.CurrentExtendedLevel != null)
             {
+                DebugHelper.Log("TryAddCurrentVanillaLevelDungeonFlow");
                 DungeonManager.TryAddCurrentVanillaLevelDungeonFlow(RoundManager.Instance.dungeonGenerator.Generator, LevelManager.CurrentExtendedLevel);
+                DebugHelper.Log("Selecting Custom Dungeon Flow");
                 DungeonLoader.SelectDungeon();
+                DebugHelper.Log("GenerateNewFloor");
             }
             else
+            {
+                DebugHelper.Log("Selecting Vanilla Dungeon Flow");
                 RoundManager.Instance.GenerateNewFloor();
+            }
         }
 
         [HarmonyPriority(harmonyPriority)]

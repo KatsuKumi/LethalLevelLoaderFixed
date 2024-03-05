@@ -1,6 +1,6 @@
 {
     "name": "LethalLevelLoaderFixed",
-    "version_number": "1.0.3",
+    "version_number": "1.1.0",
     "website_url": "https://github.com/KatsuKumi/LethalLevelLoaderFixed",
     "description": "A fix of for the Custom API that support the manual and dynamic integration of custom levels and dungeons in Lethal Company.",
     "dependencies": [

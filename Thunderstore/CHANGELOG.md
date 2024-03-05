@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0]
+
+- Fixed infinite loading when landing
+
+## [1.0.4]
+
+- Fixed dungeon interior ordering wrong
+
 ## [1.0.3]
 
 - Removed the terminal hook to fix an issue that was preventing players from using the moons catalogue.
